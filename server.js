@@ -1,45 +1,25 @@
-
+// require express and path
 var express = require("express");
 var path = require("path");
-var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
-
+// create the express app
 var app = express();
+// require bodyParser since we need to handle post data for adding a user
+var bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+// static content 
 
-// Set up database connection, Schema, model
-mongoose.connect('mongodb://localhost/quoting_dojo');
+app.use(express.static(path.join(__dirname, './client/static')));
+// setting up ejs and our views folder
 
-var QuoteSchema = new mongoose.Schema({
-  name: String,
-  quote: String
-});
-var Quote = mongoose.model('quotes', QuoteSchema);
-
-app.use(bodyParser.urlencoded());
-app.use(express.static(path.join(__dirname, "./static")));
-app.set('views', path.join(__dirname, './views'));
+app.set('views', path.join(__dirname, './client/views'));
 app.set('view engine', 'ejs');
-
-app.get('/', function(request, response) {
-    response.render('index.ejs');
-    console.log("loaded index.ejs");
-  })
-
-app.get('/quotes', function(req, res){
-    // Logic to grab all quotes and pass into the rendered view
-    Quote.find({}, function(err, results){
-      if(err) { console.log(err); }
-      res.render('quotes', { quotes: results });
-    });
-  });
-
-app.post('/quotes', function(req, res){
-  Quote.create(req.body, function(err){
-    if(err) { console.log(err); }
-    res.redirect('/quotes');
-  });
-});
-
+// require the mongoose configuration file which does the rest for us
+require('./server/config/mongoose.js');
+// store the function in a variable
+var routes_setter = require('./server/config/routes.js');
+// invoke the function stored in routes_setter and pass it the "app" variable
+routes_setter(app)
+// tell the express app to listen on port 8000
 app.listen(8000, function() {
- console.log("listening on port 8000!");
+  console.log("listening on port 8000");
 })
